@@ -4,7 +4,7 @@
 
 ### Oles Shtanko<sup>1*</sup> and Ramis Movassagh<sup>2</sup>
 <sup>1</sup>IBM Quantum, IBM Research-Almaden, San Jose CA, 95120 US\
-<sup>2</sup>IBM Quantum, MIT-IBM Watson AI Lab, Cambridge MA, 02139 US
+<sup>2</sup>IBM Quantum, MIT-IBM Watson AI Lab, Cambridge MA, 02139 US\
 <sup>*</sup> oles.shtanko@ibm.com
 
 ## arxiv:
