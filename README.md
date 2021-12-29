@@ -7,7 +7,7 @@
 
 ## arxiv: xxx
 
-Use _main.ipynb_ for complete instructions for running the code.
+Follow the instructions on running the code in _main.ipynb_.
 
 ## Dependencies
 
