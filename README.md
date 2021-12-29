@@ -1,5 +1,3 @@
-# gibbs-prep-algrthms
-
 # Supplemental Code for <br />  "Algorithms for Gibbs states preparation <br />  on noiseless and noisy random quantum circuits"
 
 ### Oles Shtanko<sup>1*</sup> and Ramis Movassagh<sup>2</sup>
