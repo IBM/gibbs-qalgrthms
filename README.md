@@ -17,5 +17,3 @@ Use _main.ipynb_ for complete instructions for running the code.
 [Scipy](https://scipy.org/) 3.4.3\
 [Matplotlib](https://matplotlib.org/) 1.7.1\
 [Qiskit](https://qiskit.org/) 0.29.0
-
-More about Qiskit: https://www.ibm.com/quantum-computing/
