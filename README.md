@@ -11,7 +11,12 @@ Use _main.ipynb_ for complete instructions for running the code.
 
 ## Dependencies
 
-### Original libraries
+### Software
+
+[Python](https://www.python.org/) 3.8.8\
+[Jupyter Notebook](https://jupyter.org/) 6.3.0
+
+### Libraries
 
 [Numpy](https://numpy.org/) 1.21.2\
 [Scipy](https://scipy.org/) 3.4.3\
