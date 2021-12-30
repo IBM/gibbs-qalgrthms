@@ -5,7 +5,7 @@
 <sup>2</sup>IBM Quantum, MIT-IBM Watson AI Lab, Cambridge MA, 02139 US\
 <sup>*</sup> oles.shtanko@ibm.com
 
-## arxiv: xxx
+## [arxiv:2112.14688](http://arxiv.org/abs/2112.14688)
 
 Follow the instructions on running the code in _main.ipynb_.
 
