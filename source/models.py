@@ -1,11 +1,13 @@
 import numpy as np
 
+# Single-qubit operators in matrix form
 I = np.array([[1,0],[0,1]])
 X = np.array([[0,1],[1,0]])
 Y = np.array([[0,-1j],[1j,0]])
 Z = np.array([[1,0],[0,-1]]) 
 H = np.array([[1,1],[1,-1]])/np.sqrt(2) 
     
+# XXZ Hamiltonian
 def xxz_ham(n,Jxx=[],Jyy=[],Jzz=[],hx=[],hz=[],hy = []):
     
     H = np.zeros([2**n,2**n],complex)

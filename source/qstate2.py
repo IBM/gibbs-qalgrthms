@@ -5,36 +5,47 @@ from numpy import logical_not as NOT
 import matplotlib.patches as mpatches
 from matplotlib.collections import PatchCollection
 
+# Single-qubit |0> state
 rho0 = np.array([[1,0],[0,0]])
  
+ # Single-qubit and two-qubit operators
 I = np.array([[1,0],[0,1]])
 X = np.array([[0,1],[1,0]])
 Y = np.array([[0,-1j],[1j,0]])
 Z = np.array([[1,0],[0,-1]]) 
-H = np.array([[1,1],[1,-1]])/np.sqrt(2) 
-S = np.array([[1,0],[0,1j]])
+H = np.array([[1,1],[1,-1]])/np.sqrt(2)  # Hadamard
+S = np.array([[1,0],[0,1j]])             # S-gate
+pauli = [I,X,Y,Z]                        # set of Pauli matrices
+
+ # Two-qubit operators
 CNOT = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
 CZ = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]])
 XX = np.kron(X,X)
 YY = np.kron(Y,Y)
 ZZ = np.kron(Z,Z)
-pauli = [I,X,Y,Z]
 
 def logical_zeros(n,x):
-    # group sizes
+
+    # returns boolean array of size "2^n" that indicates is the 
+    # state with the index has zero at position "x"
+
     d1,d2 = 2**(n-x-1),2**x
     logic0  = np.tile(np.repeat([True,False],d1),d2)
+
     return logic0
+
+
+# Circuit visualization
 
 class circuit_1d():
     
     def __init__(self,size,depth):
-        self.size = size
-        self.depth = depth
-        self.circuit = np.zeros([depth,size],int)
-        self.gate_alphabet = []
-        self.gate_size = []
-        self.gate_color = []
+        self.size = size                              # number of qubits
+        self.depth = depth                            # circuit depth
+        self.circuit = np.zeros([depth,size],int)     # initialize the circuit
+        self.gate_alphabet = []                       # gate symbols
+        self.gate_size = []                           # gate sizes
+        self.gate_color = []                          # gate colors  
         
     def show(self,ax):
         #gate_color = ['yellow','blue','orange','pink','red']
@@ -56,27 +67,40 @@ class circuit_1d():
         ax.add_collection(collection)
         ax.set_ylim(-1,len(self.circuit.T)+1)
         ax.set_axis_off()
-    
+
+#=============================================
+# Noisy circuit simulations with mixed states
+#=============================================
+
 class mixed_state():
     
     def __init__(self,n):
-        self.size = n
-        self.rho = np.zeros([2**n,2**n],complex)
-        self.rho[0,0] = 1
+
+        # store number of qubits
+        self.size = n     
+
+        # initiate density matrix
+        self.rho = np.zeros([2**n,2**n],complex)   
+        self.rho[0,0] = 1                           
     
     def apply_unitary(self,U):
+
+        # apply unitary (by direct matrix multiplication)
+
         self.rho = np.dot(U,np.dot(self.rho,U.T.conj()))
-        
-    def apply_noisy_evolution(self,H,time,p):
-        self.rho = self.rho
         
     def error(self,x,p):
         
-        # step 1: defining logical basis of two qubits A and B
+        #-----------------------------
+        # Applying depolarizing error
+        #-----------------------------
+
+        # get the indices of states with 0s and 1s
+        # for qubit at position 'x'
         logic0 = logical_zeros(self.size,x)
         logic1 = NOT(logic0)
-        # step2: performing the unitary transform
-        
+
+        # get a state with X-error
         rhoX = 0*self.rho
         rhoX[logic0] = self.rho[logic1]
         rhoX[logic1] = self.rho[logic0]
@@ -84,6 +108,7 @@ class mixed_state():
         rhoX_new.T[logic0] = rhoX.T[logic1]
         rhoX_new.T[logic1] = rhoX.T[logic0]
         
+        # get a state with Y-error
         rhoY = 0*self.rho
         rhoY[logic0] = -1j*self.rho[logic1]
         rhoY[logic1] = 1j*self.rho[logic0]
@@ -91,6 +116,7 @@ class mixed_state():
         rhoY_new.T[logic0] = 1j*rhoY.T[logic1]
         rhoY_new.T[logic1] = -1j*rhoY.T[logic0]
         
+        # get a state with Z-error
         rhoZ = 0*self.rho
         rhoZ[logic0] = self.rho[logic0]
         rhoZ[logic1] = -self.rho[logic1]
@@ -98,33 +124,47 @@ class mixed_state():
         rhoZ_new.T[logic0] = rhoZ.T[logic0]
         rhoZ_new.T[logic1] = -rhoZ.T[logic1]
         
+        # generate the output state
         self.rho = (1-p)*self.rho + p/3*rhoX_new\
                                   + p/3*rhoY_new\
                                   + p/3*rhoZ_new
     
     def apply_1qubit_gate(self,u,x):
+
+        #-----------------------------
+        # Applying single-qubit gate
+        #-----------------------------
         
+        # define conjugate to unitary 'u'
         uc = u.conj()
-        # step 1: defining logical basis of two qubits A and B
+
+        # get the indices of states with 0s and 1s
+        # for qubit at position 'x'
         logic0 = logical_zeros(self.size,x)
         logic1 = NOT(logic0)
-        # step2: performing the unitary transform
-        
+
+        # applying unitary from the left
         rho_new = 0*self.rho
         rho_new[logic0] = u[0,0]*self.rho[logic0]+u[0,1]*self.rho[logic1]
         rho_new[logic1] = u[1,0]*self.rho[logic0]+u[1,1]*self.rho[logic1]
         self.rho = rho_new.copy()
         
+        # applying conjugate unitary from the right
         rho_new = 0*self.rho
         rho_new.T[logic0] = uc[0,0]*self.rho.T[logic0]+uc[0,1]*self.rho.T[logic1]
         rho_new.T[logic1] = uc[1,0]*self.rho.T[logic0]+uc[1,1]*self.rho.T[logic1]
         self.rho = rho_new.copy()
         
     def apply_2qubit_gate(self,u,x1,x2):
+
+        #-----------------------------
+        # Applying two-qubit gate
+        #-----------------------------
         
+        # define conjugate to unitary 'u'
         uc = u.conj()
         
-        # step 1: defining logical basis of two qubits A and B
+        # get the indices of combinations {'00','01','10','11'}
         logic0A = logical_zeros(self.size,x1)
         logic0B = logical_zeros(self.size,x2)
         logic1A,logic1B = NOT(logic0A),NOT(logic0B)
@@ -132,7 +172,8 @@ class mixed_state():
         logic01 = AND(logic0A,logic1B)
         logic10 = AND(logic1A,logic0B)
         logic11 = AND(logic1A,logic1B)
-        # step2: performing the unitary transform
+
+        # applying unitary from the left
         rho_new = 0j*self.rho
         rho_new[logic00] = u[0,0]*self.rho[logic00]+u[0,1]*self.rho[logic01]+\
                            u[0,2]*self.rho[logic10]+u[0,3]*self.rho[logic11]
@@ -144,6 +185,7 @@ class mixed_state():
                            u[3,2]*self.rho[logic10]+u[3,3]*self.rho[logic11]
         self.rho = rho_new.copy() 
         
+        # applying conjugate unitary from the right
         rho_new = 0j*self.rho
         rho_new.T[logic00] = uc[0,0]*self.rho.T[logic00]+uc[0,1]*self.rho.T[logic01]+\
                              uc[0,2]*self.rho.T[logic10]+uc[0,3]*self.rho.T[logic11]
@@ -157,9 +199,15 @@ class mixed_state():
             
     def apply_3qubit_gate(self,u,x1,x2,x3):
         
+        #-----------------------------
+        # Applying three-qubit gate
+        #-----------------------------
+
+        # define conjugate to unitary 'u'
         uc = u.conj()
         
-        # step 1: defining logical basis of two qubits A and B
+        # get the indices of basis combinations 
+        # {'000','001','010','011','100','101','110','111'}
         logic0A = logical_zeros(self.size,x1)
         logic0B = logical_zeros(self.size,x2)
         logic0C = logical_zeros(self.size,x3)
@@ -173,7 +221,7 @@ class mixed_state():
         logic110 = AND(AND(logic1A,logic1B),logic0C)
         logic111 = AND(AND(logic1A,logic1B),logic1C)
         
-        # step2: performing the unitary transform
+        # applying unitary from the left
         rho_new = 0j*self.rho
         rho_new[logic000] = u[0,0]*self.rho[logic000]+u[0,1]*self.rho[logic001]+\
                             u[0,2]*self.rho[logic010]+u[0,3]*self.rho[logic011]+\
@@ -209,6 +257,7 @@ class mixed_state():
                             u[7,6]*self.rho[logic110]+u[7,7]*self.rho[logic111]
         self.rho = rho_new.copy()
         
+        # applying conjugate unitary from the right
         rho_new = 0j*self.rho
         rho_new.T[logic000] = uc[0,0]*self.rho.T[logic000]+uc[0,1]*self.rho.T[logic001]+\
                               uc[0,2]*self.rho.T[logic010]+uc[0,3]*self.rho.T[logic011]+\
@@ -245,34 +294,59 @@ class mixed_state():
                             
         self.rho = rho_new.copy()
         
-                
+
     def postselect_qubit(self,x,outcome):
-        # step 1: defining logical basis of two qubits A and B
+
+        # -----------------------------------------------------------------
+        # Imitate measurement of qubit 'x' that returned value 'outcome';
+        # return the respective probability of such measurement
+        # -----------------------------------------------------------------
+
+        # get the indices of states with 0s and 1s
+        # for qubit at position 'x'
         logic0 = logical_zeros(self.size,x)
         logic1 = NOT(logic0)
-        # step 2: apply measurement
+
+        # apply the projection
         p0 = np.round(np.sum(np.diag(self.rho)[logic0]).real,12)
         rho = np.zeros([2**self.size,2**self.size],complex)
         prob = 0
-        if outcome == 0 and p0!=0:
+
+        # update state and get the probability if outcome = 0
+        if outcome == 0 and p0 != 0:
             logic00 = np.outer(logic0,logic0)
             rho[logic00] = self.rho[logic00]
             self.rho = rho.copy()
             prob = p0
+
+        # update state and get the probability if outcome = 0
         if outcome == 1 and p0!=1:
             logic11 = np.outer(logic1,logic1)
             rho[logic11] = self.rho[logic11]
             self.rho = rho.copy()
             prob = 1-p0
+
+        # normalize the state
         self.rho = self.rho/np.trace(self.rho)
+
         return prob
     
     def reset_thermal(self,beta,x,p=1):
-        
+
+        # --------------------------------------
+        # Reset qubit 'x' to the thermal state
+        # --------------------------------------
+
+        # get the result if the inverse temperature is finite
         if beta!='+inf' and beta!='-inf':
             f0,f1 = np.exp(-beta)/(2*np.cosh(beta)),np.exp(+beta)/(2*np.cosh(beta))
+
+        # get the result if the inverse temperature is infinite (T=0)
         if beta=='+inf':
             f0,f1 = 1,0
+
+        # get the result if the inverse temperature is negative 
+        # infinite (inverse population)
         if beta=='-inf':
             f0,f1 = 0,1
 
@@ -287,6 +361,11 @@ class mixed_state():
         self.rho[logic1_mtrx] += p*f1*rho_subs
         
     def discard_qubit(self,x):
+
+        # ------------------
+        # Discard qubit 'x'
+        # -------------------
+
         logic0 = logical_zeros(self.size,x)
         logic1 = NOT(logic0)
         rho_new = np.zeros([2**(self.size-1),2**(self.size-1)],complex)
